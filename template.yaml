@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  turning-flow-analyzer
+
+  AI-powered web content analyzer API
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.9
+    Environment:
+      Variables:
+        ANTHROPIC_API_KEY: !Ref AnthropicApiKey
+        OPENAI_API_KEY: !Ref OpenAiApiKey
+
+Parameters:
+  AnthropicApiKey:
+    Type: String
+    NoEcho: true
+    Description: Anthropic API Key for Claude AI analysis
+    Default: ""
+  OpenAiApiKey:
+    Type: String
+    NoEcho: true
+    Description: OpenAI API Key for GPT analysis
+    Default: ""
+
+Resources:
+  TurningFlowAnalyzerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: lambda_handler.lambda_handler
+      Architectures:
+        - x86_64
+      Events:
+        AnalyzeUrl:
+          Type: Api
+          Properties:
+            Path: /analyze
+            Method: post
+        HealthCheck:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: get
+
+Outputs:
+  TurningFlowAnalyzerApi:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/"
+  TurningFlowAnalyzerFunction:
+    Description: "Turning Flow Analyzer Lambda Function ARN"
+    Value: !GetAtt TurningFlowAnalyzerFunction.Arn
+  TurningFlowAnalyzerFunctionIamRole:
+    Description: "Implicit IAM Role created for Turning Flow Analyzer function"
+    Value: !GetAtt TurningFlowAnalyzerFunctionRole.Arn
