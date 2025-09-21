@@ -38,6 +38,15 @@ A Python project that downloads webpages, extracts article content, and provides
    pipenv shell
    ```
 
+4. Add `.env` file with one of these environment variables for AI analysis:
+
+```bash
+# For Anthropic Claude
+ANTHROPIC_API_KEY="your_anthropic_api_key"
+
+# Or for OpenAI GPT
+OPENAI_API_KEY="your_openai_api_key"
+```
 
 ## Usage
 
@@ -50,28 +59,3 @@ With verbose output (shows extracted text):
 ```bash
 python src/turning-flow.py <URL> --verbose
 ```
-
-
-Example:
-```bash
-python src/turning-flow.py https://example.com
-```
-
-## Setup
-
-Set one of these environment variables for AI analysis:
-
-```bash
-# For Anthropic Claude
-export ANTHROPIC_API_KEY="your_anthropic_api_key"
-
-# Or for OpenAI GPT
-export OPENAI_API_KEY="your_openai_api_key"
-```
-
-## How it works
-
-1. Downloads the webpage using requests with proper headers
-2. Uses the readability-lxml library to extract the main article content
-3. Removes HTML tags and extracts clean text
-4. Uses PydanticAI with Claude or GPT models for comprehensive content analysis

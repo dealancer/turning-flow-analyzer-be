@@ -134,7 +134,7 @@ async def main_async():
         if ai_analysis.subjects:
             print("\n--- Entity Analysis ---")
             for entity in ai_analysis.subjects:
-                print(f"• {entity.entity} ({entity.entity_type}) - {entity.sentiment}")
+                print(f"* {entity.entity} ({entity.entity_type}) - {entity.sentiment}")
     else:
         print("AI analysis not available")
 
