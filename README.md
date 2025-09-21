@@ -1,4 +1,4 @@
-# Turning Flow Analyzer API
+# Turning Flow Analyzer BE
 
 A Python serverless API that downloads webpages, extracts article content, and provides comprehensive AI-powered text analysis with entity recognition. Built with AWS SAM (Serverless Application Model) for deployment as Lambda functions.
 
