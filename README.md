@@ -1,6 +1,6 @@
 # Turning Flow CMD
 
-A Python project that downloads webpages, extracts article content, and provides AI-powered text analysis.
+A Python project that downloads webpages, extracts article content, and provides comprehensive AI-powered text analysis with entity recognition.
 
 ## Features
 
@@ -8,12 +8,18 @@ A Python project that downloads webpages, extracts article content, and provides
 - Extracts main article content using Mozilla's Readability algorithm
 - Removes navigation, sidebars, and other non-content elements
 - AI-powered analysis (requires OpenAI or Anthropic API):
-  - Content summary
+  - Author detection (when mentioned)
+  - Content summary (2-3 sentences)
   - Topic identification
-  - Sentiment analysis
-  - Key themes extraction
-  - Reading difficulty assessment
-  - Estimated reading time
+  - Reading difficulty assessment (easy/medium/hard)
+  - Estimated reading time calculation
+  - Entity recognition and sentiment analysis for:
+    - People, companies, countries, cities, organizations
+    - Books, movies, songs, albums, brands, products
+    - Technologies, programming languages, frameworks, tools
+    - Currencies, cryptocurrencies, events, concepts
+    - Universities, government agencies, political parties
+    - And more entity types with individual sentiment scoring
 
 ## Installation
 

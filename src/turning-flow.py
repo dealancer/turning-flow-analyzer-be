@@ -40,15 +40,18 @@ def extract_article_content(html_content):
         print(f"Error extracting article content: {e}")
         return None
 
+class EntityAnalysis(BaseModel):
+    entity_type: str
+    entity: str
+    sentiment: str
 
 class TextAnalysis(BaseModel):
-    summary: str
+    author: Optional[str]
     topic: str
-    sentiment: str
-    key_themes: list[str]
+    summary: str
     reading_difficulty: str
     estimated_reading_time_minutes: int
-
+    subjects: list[EntityAnalysis]
 
 async def ai_analyze_text(text: str) -> Optional[TextAnalysis]:
     """Use AI to analyze text content for deeper insights."""
@@ -70,12 +73,18 @@ async def ai_analyze_text(text: str) -> Optional[TextAnalysis]:
         output_type=TextAnalysis,
         system_prompt=(
             "You are a text analysis expert. Analyze the provided text and extract:"
-            "1. A concise summary (2-3 sentences)"
+            "1. Author name if mentioned in the text (optional)"
             "2. The main topic/subject"
-            "3. Overall sentiment (positive/negative/neutral)"
-            "4. Key themes (3-5 main themes)"
-            "5. Reading difficulty (easy/medium/hard)"
-            "6. Estimated reading time in minutes (assume 200 words per minute)"
+            "3. A concise summary (2-3 sentences)"
+            "4. Reading difficulty (easy/medium/hard)"
+            "5. Estimated reading time in minutes (assume 200 words per minute)"
+            "6. Identify and analyze key entities mentioned in the text with their sentiment:"
+            "   - Entity types can include: person, company, country, city, organization, "
+            "     ticker_symbol, book, movie, song, album, brand, product, technology, "
+            "     programming_language, framework, tool, currency, cryptocurrency, "
+            "     event, concept, industry, university, government_agency, political_party"
+            "   - For each entity, provide: entity_type, entity (name), and sentiment (positive/negative/neutral)"
+            "   - Focus on the most significant entities (5-10 maximum)"
         )
     )
 
@@ -115,12 +124,17 @@ async def main_async():
     ai_analysis = await ai_analyze_text(article_text)
     if ai_analysis:
         print("\n--- AI Analysis Results ---")
-        print(f"Summary: {ai_analysis.summary}")
+        if ai_analysis.author:
+            print(f"Author: {ai_analysis.author}")
         print(f"Topic: {ai_analysis.topic}")
-        print(f"Sentiment: {ai_analysis.sentiment}")
-        print(f"Key themes: {', '.join(ai_analysis.key_themes)}")
+        print(f"Summary: {ai_analysis.summary}")
         print(f"Reading difficulty: {ai_analysis.reading_difficulty}")
         print(f"Estimated reading time: {ai_analysis.estimated_reading_time_minutes} minutes")
+
+        if ai_analysis.subjects:
+            print("\n--- Entity Analysis ---")
+            for entity in ai_analysis.subjects:
+                print(f"• {entity.entity} ({entity.entity_type}) - {entity.sentiment}")
     else:
         print("AI analysis not available")
 
