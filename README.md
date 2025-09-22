@@ -8,6 +8,7 @@ A Python serverless API that downloads webpages, extracts article content, and p
 - Downloads webpage content from any URL
 - Extracts main article content using Mozilla's Readability algorithm
 - Removes navigation, sidebars, and other non-content elements
+- **DynamoDB caching**: Results are cached for 1 week to improve performance and reduce API costs
 - AI-powered analysis (supports OpenAI or Anthropic API):
   - Author detection (when mentioned)
   - Content summary (2-3 sentences)
@@ -86,9 +87,16 @@ curl -X POST http://localhost:3000/analyze \
    sam build
    ```
 
-4. **Start the local API:**
+4. **Start DynamoDB Local and create table:**
    ```bash
-   sam local start-api --port 3000
+   # Start DynamoDB Local with docker-compose (recommended)
+   docker-compose up -d
+
+   # Create the DynamoDB table for local development
+   ./scripts/create-local-table.sh
+
+   # Start SAM with DynamoDB Local for full functionality including caching
+   sam local start-api --docker-network sam-local --parameter-overrides 'DynamoDBEndpoint=http://dynamodb-local:8000'
    ```
 
 5. **Test the API:**
@@ -101,6 +109,88 @@ curl -X POST http://localhost:3000/analyze \
      -H "Content-Type: application/json" \
      -d '{"url": "https://example.com/article"}'
    ```
+
+## DynamoDB Local Development
+
+When running locally with DynamoDB caching enabled, you can view and manage the cached data:
+
+### View DynamoDB Contents
+```bash
+# List all tables
+aws dynamodb list-tables --endpoint-url http://localhost:8000
+
+# View all cached results (scan entire table)
+aws dynamodb scan --table-name AnalysisResultsTable --endpoint-url http://localhost:8000
+
+# Get specific URL result
+aws dynamodb get-item --table-name AnalysisResultsTable \
+  --key '{"url":{"S":"https://example.com"}}' \
+  --endpoint-url http://localhost:8000
+
+# View table schema and info
+aws dynamodb describe-table --table-name AnalysisResultsTable --endpoint-url http://localhost:8000
+
+# Count items in table
+aws dynamodb scan --table-name AnalysisResultsTable --select "COUNT" --endpoint-url http://localhost:8000
+
+# View only URLs and updated timestamps (projection)
+aws dynamodb scan --table-name AnalysisResultsTable \
+  --projection-expression "url, updated" \
+  --endpoint-url http://localhost:8000
+```
+
+### DynamoDB Admin Web UI (Optional)
+To view and manage DynamoDB data through a web interface:
+
+```bash
+# Install DynamoDB Admin globally
+npm install -g dynamodb-admin
+
+# Start DynamoDB Admin (make sure DynamoDB Local is running first)
+# Option 1: Using environment variables
+DYNAMO_ENDPOINT=http://localhost:8000 dynamodb-admin
+
+# Option 2: Using command line options (if Option 1 doesn't work)
+dynamodb-admin --host localhost --port 8000
+
+# Visit the web interface
+open http://localhost:8001
+```
+
+The web UI allows you to:
+- Browse tables and data
+- Create, edit, and delete items
+- Execute queries and scans
+- View table schemas and indexes
+
+## Development Commands
+
+```bash
+# Validate SAM template
+sam validate
+
+# Build application
+sam build
+
+# Start DynamoDB Local and create table
+docker-compose up -d
+./scripts/create-local-table.sh
+
+# Start local API with DynamoDB caching
+sam local start-api --docker-network sam-local --parameter-overrides 'DynamoDBEndpoint=http://dynamodb-local:8000'
+
+# Start local API without caching
+sam local start-api
+
+# Stop DynamoDB Local
+docker-compose down
+
+# Deploy to AWS
+sam deploy --guided
+
+# Delete stack
+sam delete
+```
 
 ## Deployment
 
@@ -116,23 +206,3 @@ curl -X POST http://localhost:3000/analyze \
 
 3. **Get the API Gateway URL:**
    After deployment, the API Gateway URL will be displayed in the outputs.
-
-
-## Development Commands
-
-```bash
-# Validate SAM template
-sam validate
-
-# Build application
-sam build
-
-# Start local API
-sam local start-api
-
-# Deploy to AWS
-sam deploy --guided
-
-# Delete stack
-sam delete
-```

@@ -1,7 +1,9 @@
 import json
 import asyncio
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from analyzer import download_webpage, extract_article_content, ai_analyze_text
+from dynamodb_service import DynamoDBService
 
 
 def lambda_handler(event, context):
@@ -48,8 +50,40 @@ def lambda_handler(event, context):
 
             verbose = request_data.get('verbose', False)
 
-            # Process the request
-            result = asyncio.run(analyze_url_async(url, verbose))
+            # Initialize DynamoDB service
+            db_service = DynamoDBService()
+
+            # Check if we have cached results first
+            cached_result = db_service.get_analysis_result(url)
+            should_refresh = True
+
+            if cached_result and cached_result.get('result'):
+                # Check if the cached result is less than one week old
+                updated_str = cached_result.get('updated')
+                if updated_str:
+                    try:
+                        updated_date = datetime.fromisoformat(updated_str.replace('Z', '+00:00'))
+                        one_week_ago = datetime.now(timezone.utc) - timedelta(weeks=1)
+                        should_refresh = updated_date < one_week_ago
+                    except ValueError:
+                        # If date parsing fails, refresh the data
+                        should_refresh = True
+
+            if not should_refresh and cached_result:
+                # Return cached result
+                cached_data = json.loads(cached_result['result']) if isinstance(cached_result['result'], str) else cached_result['result']
+                result = cached_data
+                # Add the updated timestamp to the result
+                result['updated'] = cached_result.get('updated')
+            else:
+                # Process the request
+                result = asyncio.run(analyze_url_async(url, verbose))
+
+                # Save successful results to DynamoDB
+                if result.get('success'):
+                    # Add current timestamp to the result before saving
+                    result['updated'] = datetime.now(timezone.utc).isoformat()
+                    db_service.save_analysis_result(url, result)
 
             return {
                 'statusCode': 200,
